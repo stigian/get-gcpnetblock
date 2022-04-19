@@ -2,13 +2,9 @@ function Get-GcpNetBlock{
 [CmdletBinding()]
 param ()
 $gcpNetBlockList = @()
-$gcpNetBlockList = (Resolve-DnsName _cloud-netblocks.googleusercontent.com -type TXT).strings | 
-    ForEach-Object{$_ -split '\s'} | 
-    Where-Object{$_ -match 'Include'} | 
-    ForEach-Object{$_ -replace 'include:'} | 
-    ForEach{(Resolve-DnsName $_ -type TXT).strings} |
-    ForEach-Object{$_ -split '\s'} | 
-    Where-Object{$_ -match 'ip4'} | 
-    ForEach-Object{$_ -replace 'ip4:'}
+$gcpNetBlockList = Invoke-WebRequest 'https://www.gstatic.com/ipranges/goog.json' | ConvertFrom-Json | 
+    Select-Object -ExpandProperty prefixes | 
+    Where-Object{($_.ipv4prefix -ne $null)} | 
+    Select-Object -ExpandProperty ipv4Prefix 
 return $gcpNetBlockList
 }
